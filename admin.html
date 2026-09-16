@@ -66,6 +66,15 @@ button{font-family:var(--font-body); cursor:pointer;}
 .list-item .actions button.danger{color:var(--danger);}
 .pill{display:inline-block; font-size:11px; font-weight:600; border:1px solid var(--gold-deep); color:var(--gold-deep); border-radius:10px; padding:1px 9px; margin-left:8px;}
 .empty{border:1px dashed var(--line); border-radius:3px; padding:28px; text-align:center; color:var(--ink-soft);}
+.md{font-size:13.5px; color:var(--ink-soft); max-width:56ch;}
+.md p{margin:0 0 6px;}
+.md p:last-child{margin-bottom:0;}
+.md ul, .md ol{margin:0 0 6px 20px; padding:0;}
+.md li{margin-bottom:2px;}
+.md h1, .md h2, .md h3{font-family:var(--font-body); color:var(--ink); margin:6px 0 4px;}
+.md h1{font-size:16px;} .md h2{font-size:15px;} .md h3{font-size:14px;}
+.md code{background:rgba(30,37,48,0.08); padding:1px 5px; border-radius:3px; font-size:0.92em;}
+.md a{color:var(--gold-deep); text-decoration:underline; text-underline-offset:2px;}
 
 .modal-overlay{position:fixed; inset:0; background:rgba(10,10,10,0.55); display:flex; align-items:flex-start; justify-content:center; padding:6vh 20px; z-index:100; overflow-y:auto;}
 .modal-box{background:#fff; border-radius:4px; max-width:520px; width:100%; padding:30px; margin-bottom:6vh;}
@@ -239,7 +248,7 @@ async function deleteUpdate(id){
 function membersTab(){
   var list = (cache.users && cache.users.users) || [];
   var items = list.length ? list.map(function(u){
-    return '<div class="list-item"><div><div class="meta">'+esc(u.role)+'</div><h4>'+esc(u.displayName||u.username)+' <span style="color:var(--ink-soft); font-weight:400;">('+esc(u.username)+')</span></h4></div>'+
+    return '<div class="list-item"><div><div class="meta">'+esc(u.role)+(u.email?' &middot; '+esc(u.email):'')+'</div><h4>'+esc(u.displayName||u.username)+' <span style="color:var(--ink-soft); font-weight:400;">('+esc(u.username)+')</span></h4></div>'+
       '<div class="actions">'+(u.username===auth.username?'':'<button class="danger" data-action="delete-member" data-username="'+esc(u.username)+'">Remove</button>')+'</div></div>';
   }).join('') : '<div class="empty">No members yet.</div>';
   return '<div class="panel-head"><h3>Members</h3><button class="btn" data-action="add-member">+ Add member</button></div>'+items;
@@ -250,6 +259,7 @@ function memberModal(){
   '<div class="modal-box"><h2>Add member</h2>'+
     '<div class="field"><label for="m-username">Username</label><input id="m-username" autocomplete="off"></div>'+
     '<div class="field"><label for="m-displayname">Display name</label><input id="m-displayname"></div>'+
+    '<div class="field"><label for="m-email">Email</label><input id="m-email" type="email" autocomplete="off"></div>'+
     '<div class="field"><label for="m-role">Role</label><select id="m-role"><option value="member">Member</option><option value="admin">Admin</option></select></div>'+
     '<div class="field"><label for="m-password">Temporary password</label><input id="m-password" type="text"><p class="hint">Share this with them directly; they cannot change it themselves yet.</p></div>'+
     (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
@@ -260,16 +270,18 @@ function memberModal(){
 async function saveMember(){
   var username = document.getElementById('m-username').value.trim();
   var displayName = document.getElementById('m-displayname').value.trim();
+  var email = document.getElementById('m-email').value.trim();
   var role = document.getElementById('m-role').value;
   var password = document.getElementById('m-password').value;
   if(!username || !password){ ui.formError='Enter a username and password.'; render(); return; }
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ ui.formError='Enter a valid email, or leave it blank.'; render(); return; }
   var existing = (cache.users.users||[]);
   if(existing.some(function(u){ return u.username===username; })){ ui.formError='That username is already taken.'; render(); return; }
   ui.busy=true; ui.formError=''; render();
   try{
     var salt = ChoirAuth.genSalt();
     var hash = await ChoirAuth.hashPassword(password, salt);
-    var list = existing.concat([{ username:username, displayName:displayName||username, role:role, salt:salt, hash:hash }]);
+    var list = existing.concat([{ username:username, displayName:displayName||username, email:email, role:role, salt:salt, hash:hash }]);
     var result = await ChoirGitHub.putJson('users.json', {users:list}, cache.usersSha, 'Add member '+username);
     cache.users = {users:list};
     cache.usersSha = result.content.sha;
@@ -293,7 +305,7 @@ async function deleteMember(username){
 function resourcesTab(){
   var list = (cache.resources && cache.resources.resources) || [];
   var items = list.length ? list.map(function(r){
-    return '<div class="list-item"><div><h4>'+esc(r.title)+'</h4><p>'+esc(r.description||'')+'</p>'+(r.fileUrl?'<p class="meta">'+esc(r.fileUrl)+'</p>':'')+'</div>'+
+    return '<div class="list-item"><div><h4>'+esc(r.title)+'</h4>'+ChoirUtil.markdownToHtml(r.description||'')+(r.fileUrl?'<p class="meta">'+esc(r.fileUrl)+'</p>':'')+'</div>'+
       '<div class="actions"><button class="danger" data-action="delete-resource" data-id="'+r.id+'">Delete</button></div></div>';
   }).join('') : '<div class="empty">No materials yet.</div>';
   return '<div class="panel-head"><h3>Member materials</h3><button class="btn" data-action="add-resource">+ Upload material</button></div>'+items;
@@ -303,7 +315,7 @@ function resourceModal(){
   return ''+
   '<div class="modal-box"><h2>Upload material</h2>'+
     '<div class="field"><label for="r-title">Title</label><input id="r-title"></div>'+
-    '<div class="field"><label for="r-desc">Description</label><textarea id="r-desc" rows="3"></textarea></div>'+
+    '<div class="field"><label for="r-desc">Description</label><textarea id="r-desc" rows="3"></textarea><p class="hint">Markdown supported: **bold**, *italic*, `code`, [link](url), lists.</p></div>'+
     '<div class="field"><label for="r-file">File (optional)</label><input id="r-file" type="file"></div>'+
     (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
     '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-resource" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Uploading…':'Save')+'</button></div>'+

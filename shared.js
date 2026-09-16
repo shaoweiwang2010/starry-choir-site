@@ -120,6 +120,51 @@ function escapeHtml(s){
   });
 }
 function nl2br(s){ return escapeHtml(s).replace(/\n/g,'<br>'); }
+
+function mdInline(s){
+  s = s.replace(/`([^`]+)`/g, function(m,c){ return '<code>'+c+'</code>'; });
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function(m,text,url){
+    return /^(https?:|mailto:|\.{0,2}\/|#)/i.test(url) ? '<a href="'+url+'" target="_blank" rel="noopener">'+text+'</a>' : text;
+  });
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  s = s.replace(/(^|[^\w])_([^_]+)_/g, '$1<em>$2</em>');
+  return s;
+}
+function markdownToHtml(raw){
+  if(!raw) return '';
+  var lines = escapeHtml(raw).replace(/\r\n/g,'\n').split('\n');
+  var html = '', para = [], i = 0;
+  function flush(){ if(para.length){ html += '<p>'+mdInline(para.join(' '))+'</p>'; para=[]; } }
+  while(i < lines.length){
+    var line = lines[i];
+    var h = /^(#{1,3})\s+(.*)$/.exec(line);
+    var ul = /^[-*]\s+(.*)$/.exec(line);
+    var ol = /^\d+\.\s+(.*)$/.exec(line);
+    if(h){
+      flush();
+      html += '<h'+h[1].length+'>'+mdInline(h[2])+'</h'+h[1].length+'>';
+      i++;
+    } else if(ul){
+      flush();
+      var uitems = [];
+      while(i<lines.length && /^[-*]\s+(.*)$/.test(lines[i])){ uitems.push(mdInline(/^[-*]\s+(.*)$/.exec(lines[i])[1])); i++; }
+      html += '<ul>'+uitems.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul>';
+    } else if(ol){
+      flush();
+      var oitems = [];
+      while(i<lines.length && /^\d+\.\s+(.*)$/.test(lines[i])){ oitems.push(mdInline(/^\d+\.\s+(.*)$/.exec(lines[i])[1])); i++; }
+      html += '<ol>'+oitems.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ol>';
+    } else if(line.trim()===''){
+      flush(); i++;
+    } else {
+      para.push(line); i++;
+    }
+  }
+  flush();
+  return '<div class="md">'+html+'</div>';
+}
 function formatDate(d){
   try{
     var dt = new Date(d+'T00:00:00');
@@ -127,6 +172,6 @@ function formatDate(d){
     return dt.toLocaleDateString('en-US',{month:'long', day:'numeric', year:'numeric'});
   }catch(e){ return d; }
 }
-window.ChoirUtil = { escapeHtml: escapeHtml, nl2br: nl2br, formatDate: formatDate };
+window.ChoirUtil = { escapeHtml: escapeHtml, nl2br: nl2br, formatDate: formatDate, markdownToHtml: markdownToHtml };
 
 })();
