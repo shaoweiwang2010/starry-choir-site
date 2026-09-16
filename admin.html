@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starry SATB Choir &mdash; Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#141414; --navy-deep:#000000; --parchment:#FBF8F1; --parchment-alt:#F5ECD6;
+  --gold:#F5B942; --gold-deep:#D99A1E; --twilight:#2A2A2A; --ink:#1E2530; --ink-soft:#4B5563;
+  --line:rgba(30,37,48,0.14); --danger:#9A2D2D; --success:#2F6B3A;
+  --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --navy:#141414; --navy-deep:#000000; --parchment:#FBF8F1; --parchment-alt:#F5ECD6; --gold:#F5B942; --gold-deep:#D99A1E; --twilight:#2A2A2A; --ink:#1E2530; --ink-soft:#4B5563; --line:rgba(30,37,48,0.14); }
+}
+*{box-sizing:border-box;}
+body{margin:0; background:var(--parchment); color:var(--ink); font-family:var(--font-body); font-size:15px; line-height:1.55;}
+a{color:inherit;}
+h1,h2,h3{font-family:var(--font-display); font-weight:500; margin:0;}
+button{font-family:var(--font-body); cursor:pointer;}
+:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+.wrap{max-width:920px; margin:0 auto; padding:0 24px;}
+
+.top{background:var(--navy-deep); color:#fff; padding:18px 0;}
+.top .wrap{display:flex; align-items:center; justify-content:space-between;}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-size:18px;}
+.brand img{width:30px; height:30px; border-radius:4px;}
+.top-actions{display:flex; gap:16px; align-items:center; font-size:13.5px;}
+.top-actions button{background:none; border:1px solid rgba(255,255,255,0.3); color:#fff; padding:6px 14px; border-radius:2px; font-size:13px;}
+.top-actions button:hover{border-color:var(--gold); color:var(--gold);}
+.who{color:rgba(255,255,255,0.7);}
+
+.gate{max-width:420px; margin:80px auto; padding:0 24px;}
+.card{background:#fff; border:1px solid var(--line); border-radius:4px; padding:32px;}
+.card h2{font-size:22px; margin-bottom:8px;}
+.card .sub{color:var(--ink-soft); font-size:14px; margin-bottom:24px;}
+.field{margin-bottom:16px;}
+.field label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+.field input, .field select, .field textarea{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:2px; font-family:var(--font-body); font-size:14.5px; background:#fff; color:var(--ink);}
+.field textarea{resize:vertical;}
+.field .hint{font-size:12.5px; color:var(--ink-soft); margin-top:5px;}
+.err{color:var(--danger); font-size:13.5px; margin:4px 0 12px;}
+.btn{display:inline-block; padding:10px 20px; border-radius:2px; font-size:14px; font-weight:600; border:1px solid var(--navy); background:var(--navy); color:#fff;}
+.btn:hover{background:var(--navy-deep);}
+.btn.secondary{background:none; color:var(--ink); border-color:var(--line);}
+.btn.danger{background:none; color:var(--danger); border-color:var(--danger);}
+.btn.small{padding:6px 14px; font-size:13px;}
+.btn:disabled{opacity:0.5; cursor:default;}
+
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin:28px 0 24px;}
+.tab{padding:10px 18px; font-size:14.5px; background:none; border:none; border-bottom:2px solid transparent; color:var(--ink-soft);}
+.tab.active{color:var(--ink); border-bottom-color:var(--gold); font-weight:600;}
+.panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;}
+.list-item{background:#fff; border:1px solid var(--line); border-radius:3px; padding:16px 18px; margin-bottom:10px; display:flex; justify-content:space-between; gap:16px; align-items:flex-start;}
+.list-item .meta{font-size:12.5px; color:var(--ink-soft); margin-bottom:4px;}
+.list-item h4{font-size:15.5px; margin-bottom:4px; font-weight:600; font-family:var(--font-body);}
+.list-item p{margin:0; font-size:13.5px; color:var(--ink-soft); max-width:56ch;}
+.list-item .actions{display:flex; gap:10px; flex-shrink:0;}
+.list-item .actions button{background:none; border:none; font-size:13px; color:var(--twilight); text-decoration:underline; text-underline-offset:3px; padding:0;}
+.list-item .actions button.danger{color:var(--danger);}
+.pill{display:inline-block; font-size:11px; font-weight:600; border:1px solid var(--gold-deep); color:var(--gold-deep); border-radius:10px; padding:1px 9px; margin-left:8px;}
+.empty{border:1px dashed var(--line); border-radius:3px; padding:28px; text-align:center; color:var(--ink-soft);}
+
+.modal-overlay{position:fixed; inset:0; background:rgba(10,10,10,0.55); display:flex; align-items:flex-start; justify-content:center; padding:6vh 20px; z-index:100; overflow-y:auto;}
+.modal-box{background:#fff; border-radius:4px; max-width:520px; width:100%; padding:30px; margin-bottom:6vh;}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+.notice{font-size:13px; padding:10px 14px; border-radius:2px; margin-bottom:16px;}
+.notice.ok{background:#E9F3EA; color:var(--success);}
+.notice.error{background:#FBEAEA; color:var(--danger);}
+.checkrow{display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:14px;}
+.checkrow input{width:auto;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="shared.js"></script>
+<script>
+(function(){
+"use strict";
+var esc = ChoirUtil.escapeHtml;
+
+var auth = null;
+try{
+  var savedAuth = sessionStorage.getItem('choir_auth');
+  if(savedAuth){
+    var a = JSON.parse(savedAuth);
+    if(a && a.role === 'admin') auth = a;
+  }
+}catch(e){}
+
+var ghReady = ChoirGitHub.hasConfig();
+var connecting = false;
+var connectError = '';
+
+var currentTab = 'updates';
+var cache = { updates:null, updatesSha:null, users:null, usersSha:null, resources:null, resourcesSha:null };
+var dataLoaded = false;
+var loadError = '';
+
+var ui = { modal:null, editingId:null, formError:'', busy:false, uploadPct:'' };
+
+function render(){
+  var app = document.getElementById('app');
+  if(!auth){ app.innerHTML = loginGate(); return; }
+  if(!ghReady){ app.innerHTML = topBar()+githubGate(); return; }
+  if(!dataLoaded){ app.innerHTML = topBar()+loadingView(); return; }
+  app.innerHTML = topBar()+shell()+modalHtml();
+  if(ui.modal){
+    var t = document.getElementById('m-title')||document.getElementById('m-username');
+    if(t) t.focus();
+  }
+}
+
+function topBar(){
+  return ''+
+  '<div class="top"><div class="wrap">'+
+    '<div class="brand"><img src="logo.png" alt=""><span>Starry Choir &middot; Admin</span></div>'+
+    '<div class="top-actions">'+
+      (auth ? '<span class="who">'+esc(auth.displayName||auth.username)+'</span>' : '')+
+      (ghReady ? '<button data-action="disconnect-gh">Disconnect GitHub</button>' : '')+
+      (auth ? '<button data-action="logout">Log out</button>' : '')+
+    '</div>'+
+  '</div></div>';
+}
+
+function loginGate(){
+  return ''+
+  '<div class="gate"><div class="card">'+
+    '<h2>Admin sign in</h2>'+
+    '<p class="sub">This area is for choir administrators only.</p>'+
+    '<div class="field"><label for="l-user">Username</label><input id="l-user" type="text" autocomplete="username"></div>'+
+    '<div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password"></div>'+
+    (ui.formError ? '<p class="err">'+esc(ui.formError)+'</p>' : '')+
+    '<button class="btn" data-action="login" style="width:100%;">Log in</button>'+
+  '</div></div>';
+}
+
+function githubGate(){
+  var c = ChoirGitHub.cfg();
+  return ''+
+  '<div class="gate"><div class="card">'+
+    '<h2>Connect to GitHub</h2>'+
+    '<p class="sub">Changes you make here are saved by committing directly to your GitHub repo. Create a token with Contents read/write access limited to this one repo, and paste it below &mdash; it stays only in this browser tab and is never written to the repo.</p>'+
+    '<div class="field"><label for="g-owner">GitHub username or org</label><input id="g-owner" type="text" value="'+esc(c.owner)+'" placeholder="yourname"></div>'+
+    '<div class="field"><label for="g-repo">Repository name</label><input id="g-repo" type="text" value="'+esc(c.repo)+'" placeholder="starry-choir-site"></div>'+
+    '<div class="field"><label for="g-branch">Branch</label><input id="g-branch" type="text" value="'+esc(c.branch||'main')+'"></div>'+
+    '<div class="field"><label for="g-token">Personal access token</label><input id="g-token" type="password" placeholder="ghp_..."><p class="hint">GitHub &rarr; Settings &rarr; Developer settings &rarr; Fine-grained tokens &rarr; grant this repo Contents: Read and write.</p></div>'+
+    (connectError ? '<p class="err">'+esc(connectError)+'</p>' : '')+
+    '<button class="btn" data-action="connect-gh" style="width:100%;" '+(connecting?'disabled':'')+'>'+(connecting?'Connecting…':'Connect')+'</button>'+
+  '</div></div>';
+}
+
+function loadingView(){
+  return '<div class="wrap"><div class="empty" style="margin-top:60px;">'+(loadError ? esc(loadError) : 'Loading your data from GitHub…')+'</div></div>';
+}
+
+function shell(){
+  return ''+
+  '<div class="wrap">'+
+    '<div class="tabs">'+
+      '<button class="tab'+(currentTab==='updates'?' active':'')+'" data-action="tab" data-tab="updates">Updates</button>'+
+      '<button class="tab'+(currentTab==='members'?' active':'')+'" data-action="tab" data-tab="members">Members</button>'+
+      '<button class="tab'+(currentTab==='resources'?' active':'')+'" data-action="tab" data-tab="resources">Materials</button>'+
+    '</div>'+
+    (currentTab==='updates' ? updatesTab() : currentTab==='members' ? membersTab() : resourcesTab())+
+  '</div>';
+}
+
+/* ---------- Updates tab ---------- */
+function updatesTab(){
+  var list = ((cache.updates && cache.updates.updates) || []).slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+  var items = list.length ? list.map(function(u){
+    return '<div class="list-item"><div><div class="meta">'+esc(u.date)+' &middot; '+esc(u.category)+(u.pinned?' <span class="pill">pinned</span>':'')+'</div><h4>'+esc(u.title)+'</h4><p>'+esc(u.body)+'</p></div>'+
+      '<div class="actions"><button data-action="edit-update" data-id="'+u.id+'">Edit</button><button class="danger" data-action="delete-update" data-id="'+u.id+'">Delete</button></div></div>';
+  }).join('') : '<div class="empty">No updates yet.</div>';
+  return '<div class="panel-head"><h3>Updates</h3><button class="btn" data-action="add-update">+ Post an update</button></div>'+items;
+}
+
+function updateModal(){
+  var editing = ui.editingId ? (cache.updates.updates||[]).filter(function(u){return u.id===ui.editingId;})[0] : null;
+  var cats = ['News','Rehearsal','Concert','Announcement'];
+  var catOptions = cats.map(function(c){ return '<option'+(editing&&editing.category===c?' selected':'')+'>'+c+'</option>'; }).join('');
+  return ''+
+  '<div class="modal-box"><h2>'+(editing?'Edit update':'Post an update')+'</h2>'+
+    '<div class="field"><label for="m-title">Title</label><input id="m-title" value="'+esc(editing?editing.title:'')+'"></div>'+
+    '<div class="field"><label for="m-cat">Category</label><select id="m-cat">'+catOptions+'</select></div>'+
+    '<div class="field"><label for="m-date">Date</label><input id="m-date" type="date" value="'+(editing?editing.date:new Date().toISOString().slice(0,10))+'"></div>'+
+    '<div class="field"><label for="m-body">Details</label><textarea id="m-body" rows="5">'+esc(editing?editing.body:'')+'</textarea></div>'+
+    '<div class="checkrow"><input id="m-pinned" type="checkbox" '+(editing&&editing.pinned?'checked':'')+'><label for="m-pinned">Pin to top</label></div>'+
+    (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
+    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-update" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Saving…':'Save')+'</button></div>'+
+  '</div>';
+}
+
+async function saveUpdate(){
+  var title = document.getElementById('m-title').value.trim();
+  var category = document.getElementById('m-cat').value;
+  var date = document.getElementById('m-date').value;
+  var body = document.getElementById('m-body').value.trim();
+  var pinned = document.getElementById('m-pinned').checked;
+  if(!title || !date || !body){ ui.formError = 'Fill in a title, date and details.'; render(); return; }
+  ui.busy = true; ui.formError=''; render();
+  var list = (cache.updates.updates||[]).slice();
+  if(ui.editingId){
+    list = list.map(function(u){ return u.id===ui.editingId ? Object.assign({},u,{title:title,category:category,date:date,body:body,pinned:pinned}) : u; });
+  } else {
+    list.push({ id:'u'+Date.now().toString(36), title:title, category:category, date:date, body:body, pinned:pinned });
+  }
+  try{
+    var result = await ChoirGitHub.putJson('updates.json', {updates:list}, cache.updatesSha, 'Update choir updates');
+    cache.updates = {updates:list};
+    cache.updatesSha = result.content.sha;
+    ui.modal=null; ui.editingId=null; ui.busy=false;
+    render();
+  }catch(e){
+    ui.busy=false; ui.formError = e.message;
+    render();
+  }
+}
+
+async function deleteUpdate(id){
+  if(!confirm('Delete this update?')) return;
+  var list = (cache.updates.updates||[]).filter(function(u){ return u.id!==id; });
+  try{
+    var result = await ChoirGitHub.putJson('updates.json', {updates:list}, cache.updatesSha, 'Delete update '+id);
+    cache.updates = {updates:list};
+    cache.updatesSha = result.content.sha;
+    render();
+  }catch(e){ alert('Could not delete: '+e.message); }
+}
+
+/* ---------- Members tab ---------- */
+function membersTab(){
+  var list = (cache.users && cache.users.users) || [];
+  var items = list.length ? list.map(function(u){
+    return '<div class="list-item"><div><div class="meta">'+esc(u.role)+'</div><h4>'+esc(u.displayName||u.username)+' <span style="color:var(--ink-soft); font-weight:400;">('+esc(u.username)+')</span></h4></div>'+
+      '<div class="actions">'+(u.username===auth.username?'':'<button class="danger" data-action="delete-member" data-username="'+esc(u.username)+'">Remove</button>')+'</div></div>';
+  }).join('') : '<div class="empty">No members yet.</div>';
+  return '<div class="panel-head"><h3>Members</h3><button class="btn" data-action="add-member">+ Add member</button></div>'+items;
+}
+
+function memberModal(){
+  return ''+
+  '<div class="modal-box"><h2>Add member</h2>'+
+    '<div class="field"><label for="m-username">Username</label><input id="m-username" autocomplete="off"></div>'+
+    '<div class="field"><label for="m-displayname">Display name</label><input id="m-displayname"></div>'+
+    '<div class="field"><label for="m-role">Role</label><select id="m-role"><option value="member">Member</option><option value="admin">Admin</option></select></div>'+
+    '<div class="field"><label for="m-password">Temporary password</label><input id="m-password" type="text"><p class="hint">Share this with them directly; they cannot change it themselves yet.</p></div>'+
+    (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
+    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-member" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Saving…':'Add member')+'</button></div>'+
+  '</div>';
+}
+
+async function saveMember(){
+  var username = document.getElementById('m-username').value.trim();
+  var displayName = document.getElementById('m-displayname').value.trim();
+  var role = document.getElementById('m-role').value;
+  var password = document.getElementById('m-password').value;
+  if(!username || !password){ ui.formError='Enter a username and password.'; render(); return; }
+  var existing = (cache.users.users||[]);
+  if(existing.some(function(u){ return u.username===username; })){ ui.formError='That username is already taken.'; render(); return; }
+  ui.busy=true; ui.formError=''; render();
+  try{
+    var salt = ChoirAuth.genSalt();
+    var hash = await ChoirAuth.hashPassword(password, salt);
+    var list = existing.concat([{ username:username, displayName:displayName||username, role:role, salt:salt, hash:hash }]);
+    var result = await ChoirGitHub.putJson('users.json', {users:list}, cache.usersSha, 'Add member '+username);
+    cache.users = {users:list};
+    cache.usersSha = result.content.sha;
+    ui.modal=null; ui.busy=false;
+    render();
+  }catch(e){ ui.busy=false; ui.formError=e.message; render(); }
+}
+
+async function deleteMember(username){
+  if(!confirm('Remove '+username+'?')) return;
+  var list = (cache.users.users||[]).filter(function(u){ return u.username!==username; });
+  try{
+    var result = await ChoirGitHub.putJson('users.json', {users:list}, cache.usersSha, 'Remove member '+username);
+    cache.users = {users:list};
+    cache.usersSha = result.content.sha;
+    render();
+  }catch(e){ alert('Could not remove: '+e.message); }
+}
+
+/* ---------- Resources tab ---------- */
+function resourcesTab(){
+  var list = (cache.resources && cache.resources.resources) || [];
+  var items = list.length ? list.map(function(r){
+    return '<div class="list-item"><div><h4>'+esc(r.title)+'</h4><p>'+esc(r.description||'')+'</p>'+(r.fileUrl?'<p class="meta">'+esc(r.fileUrl)+'</p>':'')+'</div>'+
+      '<div class="actions"><button class="danger" data-action="delete-resource" data-id="'+r.id+'">Delete</button></div></div>';
+  }).join('') : '<div class="empty">No materials yet.</div>';
+  return '<div class="panel-head"><h3>Member materials</h3><button class="btn" data-action="add-resource">+ Upload material</button></div>'+items;
+}
+
+function resourceModal(){
+  return ''+
+  '<div class="modal-box"><h2>Upload material</h2>'+
+    '<div class="field"><label for="r-title">Title</label><input id="r-title"></div>'+
+    '<div class="field"><label for="r-desc">Description</label><textarea id="r-desc" rows="3"></textarea></div>'+
+    '<div class="field"><label for="r-file">File (optional)</label><input id="r-file" type="file"></div>'+
+    (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
+    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-resource" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Uploading…':'Save')+'</button></div>'+
+  '</div>';
+}
+
+function fileToBase64(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onload = function(){ resolve(String(reader.result).split(',')[1]); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveResource(){
+  var title = document.getElementById('r-title').value.trim();
+  var description = document.getElementById('r-desc').value.trim();
+  var fileInput = document.getElementById('r-file');
+  var file = fileInput.files[0];
+  if(!title){ ui.formError='Enter a title.'; render(); return; }
+  ui.busy=true; ui.formError=''; render();
+  try{
+    var fileUrl = null;
+    if(file){
+      var base64 = await fileToBase64(file);
+      var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
+      var path = 'resources/'+Date.now()+'-'+safeName;
+      await ChoirGitHub.putBinary(path, base64, null, 'Upload '+safeName);
+      fileUrl = './'+path;
+    }
+    var list = (cache.resources.resources||[]).concat([{ id:'r'+Date.now().toString(36), title:title, description:description, fileUrl:fileUrl, addedDate:new Date().toISOString().slice(0,10) }]);
+    var result = await ChoirGitHub.putJson('resources.json', {resources:list}, cache.resourcesSha, 'Add resource '+title);
+    cache.resources = {resources:list};
+    cache.resourcesSha = result.content.sha;
+    ui.modal=null; ui.busy=false;
+    render();
+  }catch(e){ ui.busy=false; ui.formError=e.message; render(); }
+}
+
+async function deleteResource(id){
+  if(!confirm('Delete this material entry? (The uploaded file itself will stay in the repo.)')) return;
+  var list = (cache.resources.resources||[]).filter(function(r){ return r.id!==id; });
+  try{
+    var result = await ChoirGitHub.putJson('resources.json', {resources:list}, cache.resourcesSha, 'Delete resource '+id);
+    cache.resources = {resources:list};
+    cache.resourcesSha = result.content.sha;
+    render();
+  }catch(e){ alert('Could not delete: '+e.message); }
+}
+
+function modalHtml(){
+  if(!ui.modal) return '';
+  var inner = ui.modal==='update' ? updateModal() : ui.modal==='member' ? memberModal() : ui.modal==='resource' ? resourceModal() : '';
+  return '<div class="modal-overlay" data-action="overlay">'+inner+'</div>';
+}
+
+/* ---------- Auth + GitHub connect + data load ---------- */
+async function handleLogin(){
+  var username = document.getElementById('l-user').value.trim();
+  var password = document.getElementById('l-pass').value;
+  if(!username || !password){ ui.formError='Enter your username and password.'; render(); return; }
+  try{
+    var res = await fetch('./users.json', {cache:'no-store'});
+    var data = await res.json();
+    var user = (data.users||[]).filter(function(u){ return u.username===username; })[0];
+    if(!user){ ui.formError='Incorrect username or password.'; render(); return; }
+    var hash = await ChoirAuth.hashPassword(password, user.salt);
+    if(hash !== user.hash){ ui.formError='Incorrect username or password.'; render(); return; }
+    if(user.role !== 'admin'){ ui.formError='This account is not an admin account.'; render(); return; }
+    auth = { username:user.username, role:user.role, displayName:user.displayName||user.username };
+    sessionStorage.setItem('choir_auth', JSON.stringify(auth));
+    ui.formError='';
+    render();
+  }catch(e){ ui.formError='Could not check login right now.'; render(); }
+}
+
+function logout(){
+  auth = null;
+  sessionStorage.removeItem('choir_auth');
+  render();
+}
+
+async function connectGithub(){
+  var owner = document.getElementById('g-owner').value.trim();
+  var repo = document.getElementById('g-repo').value.trim();
+  var branch = document.getElementById('g-branch').value.trim() || 'main';
+  var token = document.getElementById('g-token').value.trim();
+  if(!owner || !repo || !token){ connectError='Fill in owner, repo and token.'; render(); return; }
+  connecting = true; connectError=''; render();
+  ChoirGitHub.saveCfg(owner, repo, branch, token);
+  try{
+    await ChoirGitHub.getFile('updates.json');
+    ghReady = true;
+    connecting = false;
+    render();
+    loadAllData();
+  }catch(e){
+    connecting = false;
+    connectError = 'Could not connect: '+e.message;
+    render();
+  }
+}
+
+function disconnectGithub(){
+  ChoirGitHub.clearToken();
+  ghReady = false;
+  dataLoaded = false;
+  render();
+}
+
+async function loadAllData(){
+  dataLoaded = false; loadError=''; render();
+  try{
+    var u = await ChoirGitHub.getFile('updates.json');
+    var us = await ChoirGitHub.getFile('users.json');
+    var r = await ChoirGitHub.getFile('resources.json');
+    cache.updates = u.json || {updates:[]}; cache.updatesSha = u.sha;
+    cache.users = us.json || {users:[]}; cache.usersSha = us.sha;
+    cache.resources = r.json || {resources:[]}; cache.resourcesSha = r.sha;
+    dataLoaded = true;
+    render();
+  }catch(e){
+    loadError = 'Could not load data: '+e.message;
+    render();
+  }
+}
+
+document.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-action]');
+  if(!el){
+    if(ev.target.classList && ev.target.classList.contains('modal-overlay')){ ui.modal=null; ui.formError=''; render(); }
+    return;
+  }
+  var action = el.getAttribute('data-action');
+  if(action==='login'){ handleLogin(); }
+  else if(action==='logout'){ logout(); }
+  else if(action==='connect-gh'){ connectGithub(); }
+  else if(action==='disconnect-gh'){ disconnectGithub(); }
+  else if(action==='tab'){ currentTab = el.getAttribute('data-tab'); render(); }
+  else if(action==='add-update'){ ui.modal='update'; ui.editingId=null; ui.formError=''; render(); }
+  else if(action==='edit-update'){ ui.modal='update'; ui.editingId=el.getAttribute('data-id'); ui.formError=''; render(); }
+  else if(action==='delete-update'){ deleteUpdate(el.getAttribute('data-id')); }
+  else if(action==='save-update'){ saveUpdate(); }
+  else if(action==='add-member'){ ui.modal='member'; ui.formError=''; render(); }
+  else if(action==='save-member'){ saveMember(); }
+  else if(action==='delete-member'){ deleteMember(el.getAttribute('data-username')); }
+  else if(action==='add-resource'){ ui.modal='resource'; ui.formError=''; render(); }
+  else if(action==='save-resource'){ saveResource(); }
+  else if(action==='delete-resource'){ deleteResource(el.getAttribute('data-id')); }
+  else if(action==='close-modal'){ ui.modal=null; ui.formError=''; render(); }
+  else if(action==='overlay'){ ui.modal=null; ui.formError=''; render(); }
+});
+document.addEventListener('keydown', function(ev){ if(ev.key==='Escape' && ui.modal){ ui.modal=null; render(); } });
+
+render();
+if(auth && ghReady){ loadAllData(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "updates": [
+    {
+      "id": "seed-welcome",
+      "title": "Welcome to our new website",
+      "category": "News",
+      "date": "2026-09-16",
+      "body": "This is the choir's new home online. Rehearsal times, upcoming concerts and other news will be posted right here.",
+      "pinned": false
+    },
+    {
+      "id": "seed-rehearsal",
+      "title": "Rehearsal details",
+      "category": "Rehearsal",
+      "date": "2026-09-16",
+      "body": "Add your rehearsal day, time and location from the admin panel, then keep this pinned.",
+      "pinned": true
+    },
+    {
+      "id": "seed-concert",
+      "title": "Next concert",
+      "category": "Concert",
+      "date": "2026-09-16",
+      "body": "Add details of your next concert or performance from the admin panel, then keep this pinned.",
+      "pinned": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "displayName": "Choir Admin",
+      "role": "admin",
+      "salt": "ec99e43f10a96120c06a6e5d62023e9f",
+      "hash": "ea9e5bb8ad7331054c9851ffbac47a172ce13b4d7d34c0d941ac4d5b240c8861"
+    }
+  ]
+}

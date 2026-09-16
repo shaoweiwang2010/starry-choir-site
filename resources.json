@@ -1,0 +1,11 @@
+{
+  "resources": [
+    {
+      "id": "seed-welcome-res",
+      "title": "Welcome, members",
+      "description": "Member-only materials such as sheet music and rehearsal recordings will appear here once the admin uploads them.",
+      "fileUrl": null,
+      "addedDate": "2026-09-16"
+    }
+  ]
+}
