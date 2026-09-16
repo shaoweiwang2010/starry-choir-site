@@ -13,6 +13,13 @@
       "role": "member",
       "salt": "637fe731042ec300e84e17279dbb3b67",
       "hash": "cd782d1e552413b279caa2a7acbe3e2d33f6141a20df8bf09bf056cbc0d78de5"
+    },
+    {
+      "username": "huahua",
+      "displayName": "huahua",
+      "role": "admin",
+      "salt": "205e5ab8bd43a280b08160d560cf48f8",
+      "hash": "69b00643e19db3663351136cb704fb0e2126fdb9a0456a4a4eef0d8b059801e9"
     }
   ]
 }
