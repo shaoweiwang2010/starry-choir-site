@@ -8,7 +8,7 @@
       "body": "This is the choir's new home online. Rehearsal times, upcoming concerts and other news will be posted right here.",
       "pinned": false
     },
-     {
+    {
       "id": "test",
       "title": "test",
       "category": "test",
@@ -31,6 +31,14 @@
       "date": "2026-09-16",
       "body": "Add details of your next concert or performance from the admin panel, then keep this pinned.",
       "pinned": true
+    },
+    {
+      "id": "umu4ji8ge",
+      "title": "test",
+      "category": "News",
+      "date": "2026-09-16",
+      "body": "test",
+      "pinned": false
     }
   ]
 }
