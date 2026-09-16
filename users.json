@@ -20,6 +20,13 @@
       "role": "admin",
       "salt": "205e5ab8bd43a280b08160d560cf48f8",
       "hash": "69b00643e19db3663351136cb704fb0e2126fdb9a0456a4a4eef0d8b059801e9"
+    },
+    {
+      "username": "user1",
+      "displayName": "user1",
+      "role": "member",
+      "salt": "b94a764cce6d032eb4eddf5ab0ca6499",
+      "hash": "e6061c51cfe84c0d7c67c65f017967c9627b53d617dede525ca3dda8c2cf2d93"
     }
   ]
 }
