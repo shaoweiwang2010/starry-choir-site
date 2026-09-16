@@ -249,21 +249,22 @@ function membersTab(){
   var list = (cache.users && cache.users.users) || [];
   var items = list.length ? list.map(function(u){
     return '<div class="list-item"><div><div class="meta">'+esc(u.role)+(u.email?' &middot; '+esc(u.email):'')+'</div><h4>'+esc(u.displayName||u.username)+' <span style="color:var(--ink-soft); font-weight:400;">('+esc(u.username)+')</span></h4></div>'+
-      '<div class="actions">'+(u.username===auth.username?'':'<button class="danger" data-action="delete-member" data-username="'+esc(u.username)+'">Remove</button>')+'</div></div>';
+      '<div class="actions"><button data-action="edit-member" data-username="'+esc(u.username)+'">Edit</button>'+(u.username===auth.username?'':'<button class="danger" data-action="delete-member" data-username="'+esc(u.username)+'">Remove</button>')+'</div></div>';
   }).join('') : '<div class="empty">No members yet.</div>';
   return '<div class="panel-head"><h3>Members</h3><button class="btn" data-action="add-member">+ Add member</button></div>'+items;
 }
 
 function memberModal(){
+  var editing = ui.editingId ? (cache.users.users||[]).filter(function(u){return u.username===ui.editingId;})[0] : null;
   return ''+
-  '<div class="modal-box"><h2>Add member</h2>'+
-    '<div class="field"><label for="m-username">Username</label><input id="m-username" autocomplete="off"></div>'+
-    '<div class="field"><label for="m-displayname">Display name</label><input id="m-displayname"></div>'+
-    '<div class="field"><label for="m-email">Email</label><input id="m-email" type="email" autocomplete="off"></div>'+
-    '<div class="field"><label for="m-role">Role</label><select id="m-role"><option value="member">Member</option><option value="admin">Admin</option></select></div>'+
-    '<div class="field"><label for="m-password">Temporary password</label><input id="m-password" type="text"><p class="hint">Share this with them directly; they cannot change it themselves yet.</p></div>'+
+  '<div class="modal-box"><h2>'+(editing?'Edit member':'Add member')+'</h2>'+
+    '<div class="field"><label for="m-username">Username</label><input id="m-username" autocomplete="off" value="'+esc(editing?editing.username:'')+'" '+(editing?'readonly':'')+'>'+(editing?'<p class="hint">Username cannot be changed.</p>':'')+'</div>'+
+    '<div class="field"><label for="m-displayname">Display name</label><input id="m-displayname" value="'+esc(editing?(editing.displayName||''):'')+'"></div>'+
+    '<div class="field"><label for="m-email">Email</label><input id="m-email" type="email" autocomplete="off" value="'+esc(editing?(editing.email||''):'')+'"></div>'+
+    '<div class="field"><label for="m-role">Role</label><select id="m-role"><option value="member"'+(editing&&editing.role==='member'?' selected':'')+'>Member</option><option value="admin"'+(editing&&editing.role==='admin'?' selected':'')+'>Admin</option></select></div>'+
+    '<div class="field"><label for="m-password">'+(editing?'New password':'Temporary password')+'</label><input id="m-password" type="text"><p class="hint">'+(editing?'Leave blank to keep their current password.':'Share this with them directly; they cannot change it themselves yet.')+'</p></div>'+
     (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
-    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-member" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Saving…':'Add member')+'</button></div>'+
+    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-member" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Saving…':(editing?'Save changes':'Add member'))+'</button></div>'+
   '</div>';
 }
 
@@ -273,19 +274,26 @@ async function saveMember(){
   var email = document.getElementById('m-email').value.trim();
   var role = document.getElementById('m-role').value;
   var password = document.getElementById('m-password').value;
-  if(!username || !password){ ui.formError='Enter a username and password.'; render(); return; }
+  var editing = ui.editingId ? (cache.users.users||[]).filter(function(u){return u.username===ui.editingId;})[0] : null;
+  if(!username || (!editing && !password)){ ui.formError='Enter a username and password.'; render(); return; }
   if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ ui.formError='Enter a valid email, or leave it blank.'; render(); return; }
   var existing = (cache.users.users||[]);
-  if(existing.some(function(u){ return u.username===username; })){ ui.formError='That username is already taken.'; render(); return; }
+  if(!editing && existing.some(function(u){ return u.username===username; })){ ui.formError='That username is already taken.'; render(); return; }
   ui.busy=true; ui.formError=''; render();
   try{
-    var salt = ChoirAuth.genSalt();
-    var hash = await ChoirAuth.hashPassword(password, salt);
-    var list = existing.concat([{ username:username, displayName:displayName||username, email:email, role:role, salt:salt, hash:hash }]);
-    var result = await ChoirGitHub.putJson('users.json', {users:list}, cache.usersSha, 'Add member '+username);
+    var salt = editing ? editing.salt : ChoirAuth.genSalt();
+    var hash = editing ? editing.hash : null;
+    if(password){ salt = ChoirAuth.genSalt(); hash = await ChoirAuth.hashPassword(password, salt); }
+    var list;
+    if(editing){
+      list = existing.map(function(u){ return u.username===editing.username ? Object.assign({},u,{displayName:displayName||username, email:email, role:role, salt:salt, hash:hash}) : u; });
+    } else {
+      list = existing.concat([{ username:username, displayName:displayName||username, email:email, role:role, salt:salt, hash:hash }]);
+    }
+    var result = await ChoirGitHub.putJson('users.json', {users:list}, cache.usersSha, (editing?'Update member ':'Add member ')+username);
     cache.users = {users:list};
     cache.usersSha = result.content.sha;
-    ui.modal=null; ui.busy=false;
+    ui.modal=null; ui.editingId=null; ui.busy=false;
     render();
   }catch(e){ ui.busy=false; ui.formError=e.message; render(); }
 }
@@ -306,19 +314,20 @@ function resourcesTab(){
   var list = (cache.resources && cache.resources.resources) || [];
   var items = list.length ? list.map(function(r){
     return '<div class="list-item"><div><h4>'+esc(r.title)+'</h4>'+ChoirUtil.markdownToHtml(r.description||'')+(r.fileUrl?'<p class="meta">'+esc(r.fileUrl)+'</p>':'')+'</div>'+
-      '<div class="actions"><button class="danger" data-action="delete-resource" data-id="'+r.id+'">Delete</button></div></div>';
+      '<div class="actions"><button data-action="edit-resource" data-id="'+r.id+'">Edit</button><button class="danger" data-action="delete-resource" data-id="'+r.id+'">Delete</button></div></div>';
   }).join('') : '<div class="empty">No materials yet.</div>';
   return '<div class="panel-head"><h3>Member materials</h3><button class="btn" data-action="add-resource">+ Upload material</button></div>'+items;
 }
 
 function resourceModal(){
+  var editing = ui.editingId ? (cache.resources.resources||[]).filter(function(r){return r.id===ui.editingId;})[0] : null;
   return ''+
-  '<div class="modal-box"><h2>Upload material</h2>'+
-    '<div class="field"><label for="r-title">Title</label><input id="r-title"></div>'+
-    '<div class="field"><label for="r-desc">Description</label><textarea id="r-desc" rows="3"></textarea><p class="hint">Markdown supported: **bold**, *italic*, `code`, [link](url), lists.</p></div>'+
-    '<div class="field"><label for="r-file">File (optional)</label><input id="r-file" type="file"></div>'+
+  '<div class="modal-box"><h2>'+(editing?'Edit material':'Upload material')+'</h2>'+
+    '<div class="field"><label for="r-title">Title</label><input id="r-title" value="'+esc(editing?editing.title:'')+'"></div>'+
+    '<div class="field"><label for="r-desc">Description</label><textarea id="r-desc" rows="3">'+esc(editing?(editing.description||''):'')+'</textarea><p class="hint">Markdown supported: **bold**, *italic*, `code`, [link](url), lists.</p></div>'+
+    '<div class="field"><label for="r-file">File'+(editing&&editing.fileUrl?' (optional &mdash; leave blank to keep the current file)':' (optional)')+'</label><input id="r-file" type="file">'+(editing&&editing.fileUrl?'<p class="hint">Current file: '+esc(editing.fileUrl)+'</p>':'')+'</div>'+
     (ui.formError?'<p class="err">'+esc(ui.formError)+'</p>':'')+
-    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-resource" '+(ui.busy?'disabled':'')+'>'+(ui.busy?'Uploading…':'Save')+'</button></div>'+
+    '<div class="modal-actions"><button class="btn secondary" data-action="close-modal">Cancel</button><button class="btn" data-action="save-resource" '+(ui.busy?'disabled':'')+'>'+(ui.busy?(editing?'Saving…':'Uploading…'):'Save')+'</button></div>'+
   '</div>';
 }
 
@@ -339,7 +348,8 @@ async function saveResource(){
   if(!title){ ui.formError='Enter a title.'; render(); return; }
   ui.busy=true; ui.formError=''; render();
   try{
-    var fileUrl = null;
+    var editing = ui.editingId ? (cache.resources.resources||[]).filter(function(r){return r.id===ui.editingId;})[0] : null;
+    var fileUrl = editing ? editing.fileUrl : null;
     if(file){
       var base64 = await fileToBase64(file);
       var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
@@ -347,11 +357,16 @@ async function saveResource(){
       await ChoirGitHub.putBinary(path, base64, null, 'Upload '+safeName);
       fileUrl = './'+path;
     }
-    var list = (cache.resources.resources||[]).concat([{ id:'r'+Date.now().toString(36), title:title, description:description, fileUrl:fileUrl, addedDate:new Date().toISOString().slice(0,10) }]);
-    var result = await ChoirGitHub.putJson('resources.json', {resources:list}, cache.resourcesSha, 'Add resource '+title);
+    var list;
+    if(editing){
+      list = (cache.resources.resources||[]).map(function(r){ return r.id===editing.id ? Object.assign({},r,{title:title,description:description,fileUrl:fileUrl}) : r; });
+    } else {
+      list = (cache.resources.resources||[]).concat([{ id:'r'+Date.now().toString(36), title:title, description:description, fileUrl:fileUrl, addedDate:new Date().toISOString().slice(0,10) }]);
+    }
+    var result = await ChoirGitHub.putJson('resources.json', {resources:list}, cache.resourcesSha, (editing?'Update resource ':'Add resource ')+title);
     cache.resources = {resources:list};
     cache.resourcesSha = result.content.sha;
-    ui.modal=null; ui.busy=false;
+    ui.modal=null; ui.editingId=null; ui.busy=false;
     render();
   }catch(e){ ui.busy=false; ui.formError=e.message; render(); }
 }
@@ -460,10 +475,12 @@ document.addEventListener('click', function(ev){
   else if(action==='edit-update'){ ui.modal='update'; ui.editingId=el.getAttribute('data-id'); ui.formError=''; render(); }
   else if(action==='delete-update'){ deleteUpdate(el.getAttribute('data-id')); }
   else if(action==='save-update'){ saveUpdate(); }
-  else if(action==='add-member'){ ui.modal='member'; ui.formError=''; render(); }
+  else if(action==='add-member'){ ui.modal='member'; ui.editingId=null; ui.formError=''; render(); }
+  else if(action==='edit-member'){ ui.modal='member'; ui.editingId=el.getAttribute('data-username'); ui.formError=''; render(); }
   else if(action==='save-member'){ saveMember(); }
   else if(action==='delete-member'){ deleteMember(el.getAttribute('data-username')); }
-  else if(action==='add-resource'){ ui.modal='resource'; ui.formError=''; render(); }
+  else if(action==='add-resource'){ ui.modal='resource'; ui.editingId=null; ui.formError=''; render(); }
+  else if(action==='edit-resource'){ ui.modal='resource'; ui.editingId=el.getAttribute('data-id'); ui.formError=''; render(); }
   else if(action==='save-resource'){ saveResource(); }
   else if(action==='delete-resource'){ deleteResource(el.getAttribute('data-id')); }
   else if(action==='close-modal'){ ui.modal=null; ui.formError=''; render(); }
