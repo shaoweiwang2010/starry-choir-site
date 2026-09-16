@@ -358,7 +358,7 @@ async function deleteResource(id){
 function modalHtml(){
   if(!ui.modal) return '';
   var inner = ui.modal==='update' ? updateModal() : ui.modal==='member' ? memberModal() : ui.modal==='resource' ? resourceModal() : '';
-  return '<div class="modal-overlay" data-action="overlay">'+inner+'</div>';
+  return '<div class="modal-overlay">'+inner+'</div>';
 }
 
 /* ---------- Auth + GitHub connect + data load ---------- */
@@ -455,7 +455,6 @@ document.addEventListener('click', function(ev){
   else if(action==='save-resource'){ saveResource(); }
   else if(action==='delete-resource'){ deleteResource(el.getAttribute('data-id')); }
   else if(action==='close-modal'){ ui.modal=null; ui.formError=''; render(); }
-  else if(action==='overlay'){ ui.modal=null; ui.formError=''; render(); }
 });
 document.addEventListener('keydown', function(ev){ if(ev.key==='Escape' && ui.modal){ ui.modal=null; render(); } });
 
